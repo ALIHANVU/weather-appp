@@ -1,145 +1,181 @@
-const CACHE_NAME = 'weather-app-cache-v3'; // Обновите версию при изменениях
-// --- Укажите путь или URL вашего API прокси ---
-// Если прокси на том же домене (например, через Netlify/Vercel):
-const PROXY_API_PATH = '/api/'; // Пример для Netlify/Vercel
-// Если прокси на другом домене (например, Cloudflare Worker):
-// const PROXY_API_ORIGIN = 'https://your-proxy-worker.example.com';
-// -----------------------------------------
+/**
+ * Service Worker для кэширования ресурсов приложения Погоды.
+ * Версия: v5
+ */
 
-const urlsToCache = [
-  '/', // Главная страница
-  '/index.html', // Явно
-  '/styles.css',
-  '/manifest.json',
-  '/images/icon-192.png',
-  '/images/icon-512.png',
-  '/images/sun-svgrepo-com (2).svg',
-  '/js/main.js',
-  '/js/api.js',
-  '/js/ui.js',
-  '/js/state.js',
-  '/js/utils.js',
-  '/js/tips.js',
-  '/js/constants.js',
-  '/farmer-tips.json',
-  // Шрифты (осторожно, могут меняться)
+// --- КОНФИГУРАЦИЯ ---
+
+// ВАЖНО: Установите правильный базовый путь для вашего приложения на GitHub Pages.
+// Пример 1: Если URL https://username.github.io/my-repo/weather-appp/
+// const basePath = '/my-repo/weather-appp/';
+// Пример 2: Если URL https://username.github.io/weather-appp/ (репозиторий назван username.github.io)
+const basePath = '/weather-appp/'; // <-- ИЗМЕНИТЕ ЭТОТ ПУТЬ ПРИ НЕОБХОДИМОСТИ!
+// --------------------
+
+const CACHE_NAME = 'weather-app-cache-v5'; // Увеличивайте версию при обновлении SW или ресурсов
+
+// --- ВАЖНО: Укажите путь или URL вашего API прокси ---
+// Используйте тот же путь, что и в js/constants.js
+const PROXY_API_PATH = '/api/'; // <-- Убедитесь, что это правильный путь к вашему прокси
+// ----------------------------------------------------
+
+// Ресурсы для обязательного кэширования при установке
+const CORE_ASSETS = [
+  basePath, // Главный путь приложения (обычно соответствует index.html)
+  basePath + 'index.html',
+  basePath + 'styles.css',
+  basePath + 'manifest.json',
+  basePath + 'images/icon-192.png',
+  basePath + 'images/icon-512.png',
+  basePath + 'images/sun-svgrepo-com (2).svg',
+  basePath + 'js/main.js',
+  basePath + 'js/api.js',
+  basePath + 'js/ui.js',
+  basePath + 'js/state.js',
+  basePath + 'js/utils.js',
+  basePath + 'js/tips.js',
+  basePath + 'js/constants.js',
+  basePath + 'farmer-tips.json',
+];
+
+// Внешние ресурсы для кэширования (опционально, но улучшает оффлайн)
+const VENDOR_ASSETS = [
   'https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600&display=swap',
 ];
 
-// Установка
+// --- ЛОГИКА SERVICE WORKER ---
+
+// Установка: кэширование основных ресурсов
 self.addEventListener('install', event => {
-  console.log('[SW] Установка v3');
+  console.log(`[SW ${CACHE_NAME}] Установка`);
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('[SW] Кэширование базовых ресурсов');
-        // addAll атомарна, если один файл не загрузится, весь кэш не создастся
-        return cache.addAll(urlsToCache).catch(error => {
-            console.error('[SW] Не удалось закэшировать все ресурсы:', error);
-            // Можно попробовать кэшировать по одному, игнорируя ошибки
-            // Promise.all(
-            //     urlsToCache.map(url => cache.add(url).catch(err => console.warn(`[SW] Не удалось кэшировать ${url}:`, err)))
-            // );
-        });
+        console.log(`[SW ${CACHE_NAME}] Кэширование основных ресурсов...`);
+        // Кэшируем основные и внешние ресурсы
+        const allAssetsToCache = [...CORE_ASSETS, ...VENDOR_ASSETS];
+        return Promise.all(
+            allAssetsToCache.map(url =>
+                cache.add(url).catch(err => console.warn(`[SW ${CACHE_NAME}] Не удалось кэшировать ${url}:`, err))
+            )
+        );
       })
-      .catch(error => console.error('[SW] Ошибка открытия кэша при установке:', error))
+      .then(() => {
+        console.log(`[SW ${CACHE_NAME}] Базовые ресурсы успешно закэшированы.`);
+        self.skipWaiting(); // Активируем новый SW сразу
+      })
+      .catch(error => console.error(`[SW ${CACHE_NAME}] Ошибка кэширования при установке:`, error))
   );
-  self.skipWaiting();
 });
 
-// Активация и очистка старых кэшей
+// Активация: очистка старых кэшей
 self.addEventListener('activate', event => {
-  console.log('[SW] Активация v3');
+  console.log(`[SW ${CACHE_NAME}] Активация`);
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames.filter(name => name !== CACHE_NAME)
-                  .map(name => {
-                      console.log('[SW] Удаление старого кэша:', name);
-                      return caches.delete(name);
-                  })
+        cacheNames
+          .filter(name => name !== CACHE_NAME) // Удаляем все кэши, кроме текущего
+          .map(name => {
+            console.log(`[SW ${CACHE_NAME}] Удаление старого кэша:`, name);
+            return caches.delete(name);
+          })
       );
-    }).then(() => self.clients.claim())
+    }).then(() => {
+      console.log(`[SW ${CACHE_NAME}] Старые кэши удалены.`);
+      return self.clients.claim(); // Берем контроль над открытыми страницами
+    }).catch(error => console.error(`[SW ${CACHE_NAME}] Ошибка при очистке старых кэшей:`, error))
   );
 });
 
-// Обработка запросов
+// Обработка запросов (Fetch Event)
 self.addEventListener('fetch', event => {
-  const requestUrl = new URL(event.request.url);
+  const { request } = event;
+  const requestUrl = new URL(request.url);
 
-  // 1. Запросы к API прокси - Network first, fallback to cache (или Network Only)
-  // Определяем, является ли запрос запросом к API
+  // Игнорируем запросы не-GET (POST, PUT и т.д.) - они не кэшируются
+  if (request.method !== 'GET') {
+    return;
+  }
+
+  // 1. Запросы к API прокси (Network Only)
   const isApiRequest = requestUrl.pathname.startsWith(PROXY_API_PATH);
-                     // || (typeof PROXY_API_ORIGIN !== 'undefined' && requestUrl.origin === PROXY_API_ORIGIN);
-
   if (isApiRequest) {
-      // console.log('[SW] API Request (Network First):', event.request.url);
-       event.respondWith(
-           fetch(event.request)
-               .then(networkResponse => {
-                   // Опционально: кэшируем успешный ответ API
-                   // if (networkResponse.ok) {
-                   //     const cacheCopy = networkResponse.clone();
-                   //     caches.open(CACHE_NAME).then(cache => cache.put(event.request, cacheCopy));
-                   // }
-                   return networkResponse;
-               })
-               .catch(error => {
-                   console.warn('[SW] Сеть недоступна для API, ищем в кэше:', error);
-                   // return caches.match(event.request); // Пытаемся вернуть из кэша, если сеть упала
-                   // Или просто возвращаем ошибку, если оффлайн API не нужно
-                   return new Response(JSON.stringify({ error: "Network error or offline" }), {
-                       status: 503, // Service Unavailable
-                       headers: { 'Content-Type': 'application/json' }
-                   });
-               })
-       );
-       return;
-   }
+    // console.log(`[SW ${CACHE_NAME}] API Запрос (Сеть): ${request.url}`);
+    event.respondWith(
+      fetch(request).catch(error => {
+        console.error(`[SW ${CACHE_NAME}] Ошибка сети API: ${request.url}`, error);
+        // Возвращаем стандартный ответ об ошибке сети
+        return new Response(JSON.stringify({ error: "Network error or proxy offline" }), {
+          status: 503, // Service Unavailable
+          headers: { 'Content-Type': 'application/json' }
+        });
+      })
+    );
+    return; // Прерываем выполнение для этого запроса
+  }
 
-  // 2. Запросы к внешним ресурсам (шрифты) - Cache first, fallback to network
-   if (requestUrl.hostname === 'fonts.googleapis.com' || requestUrl.hostname === 'fonts.gstatic.com') {
-       // console.log('[SW] Font Request (Cache First):', event.request.url);
-       event.respondWith(
-           caches.match(event.request).then(cachedResponse => {
-               return cachedResponse || fetch(event.request).then(networkResponse => {
-                   // Кэшируем шрифты, т.к. они меняются редко
-                   if(networkResponse.ok) {
-                       const cacheCopy = networkResponse.clone();
-                       caches.open(CACHE_NAME).then(cache => cache.put(event.request, cacheCopy));
-                   }
-                   return networkResponse;
-               });
-           })
-       );
-       return;
-   }
-
-
-  // 3. Остальные запросы (наша статика) - Cache first, fallback to network
-  // console.log('[SW] Static Asset Request (Cache First):', event.request.url);
-  event.respondWith(
-    caches.match(event.request)
-      .then(cachedResponse => {
-        // Если есть в кэше - отдаем
+  // 2. Запросы к внешним ресурсам (шрифты) - Cache First, Fallback to Network
+  if (VENDOR_ASSETS.some(vendorUrl => requestUrl.href.startsWith(new URL(vendorUrl, self.location.origin).origin))) {
+     // console.log(`[SW ${CACHE_NAME}] Внешний Ресурс (Кэш, потом Сеть): ${request.url}`);
+    event.respondWith(
+      caches.match(request).then(cachedResponse => {
         if (cachedResponse) {
           return cachedResponse;
         }
-        // Иначе - идем в сеть
-        return fetch(event.request).then(networkResponse => {
-            // Кэшируем только если запрос успешный и это наш ресурс
-            if (networkResponse.ok && requestUrl.origin === self.location.origin) {
-                 const cacheCopy = networkResponse.clone();
-                 caches.open(CACHE_NAME).then(cache => cache.put(event.request, cacheCopy));
-             }
-             return networkResponse;
+        // Если нет в кэше, идем в сеть и кэшируем ответ
+        return fetch(request).then(networkResponse => {
+          if (networkResponse.ok) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return networkResponse;
         }).catch(error => {
-            console.error("[SW] Сеть недоступна для статики:", event.request.url, error);
-            // Можно вернуть кастомную оффлайн-страницу
-            // return caches.match('/offline.html');
-             // Или просто ошибку
-             return new Response("Network error loading resource", { status: 503 });
+            console.error(`[SW ${CACHE_NAME}] Ошибка сети для внешнего ресурса ${request.url}:`, error);
+             // Возвращаем пустой ответ или ошибку, т.к. это не критичный ресурс
+             return new Response('', { status: 503 });
         });
       })
-  );
+    );
+    return;
+  }
+
+  // 3. Запросы к нашим статическим ресурсам - Cache First, Fallback to Network
+  // Проверяем, что запрос идет к нашему origin и basePath
+  if (requestUrl.origin === self.location.origin && requestUrl.pathname.startsWith(basePath)) {
+     // console.log(`[SW ${CACHE_NAME}] Статика (Кэш, потом Сеть): ${request.url}`);
+    event.respondWith(
+      caches.match(request).then(cachedResponse => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        // Если нет в кэше, идем в сеть и кэшируем
+        return fetch(request).then(networkResponse => {
+          // Кэшируем только успешные ответы
+          if (networkResponse.ok) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return networkResponse;
+        }).catch(error => {
+          console.error(`[SW ${CACHE_NAME}] Ошибка сети для статики ${request.url}:`, error);
+          // Для навигационных запросов (переход по страницам), пытаемся отдать index.html
+          if (request.mode === 'navigate') {
+            console.log(`[SW ${CACHE_NAME}] Отдаем ${basePath}index.html как fallback для навигации.`);
+            return caches.match(basePath + 'index.html');
+          }
+           // Для других ресурсов возвращаем ошибку
+           return new Response('Network error loading resource', { status: 503 });
+        });
+      })
+    );
+    return;
+  }
+
+  // Если запрос не соответствует ни одному из правил, просто выполняем его
+  // console.log(`[SW ${CACHE_NAME}] Запрос не обрабатывается SW: ${request.url}`);
 });
