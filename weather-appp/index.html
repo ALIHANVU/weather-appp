@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Погода</title>
-    <meta name="theme-color" content="#f2f2f7"> <!-- Цвет для PWA -->
-    <!-- Пути к файлам (относительно корня сайта). Если сайт в подпапке /repo-name/, добавьте ее в начало -->
-    <link rel="icon" type="image/svg+xml" href="/images/sun-svgrepo-com (2).svg">
-    <link rel="apple-touch-icon" href="/images/icon-192.png"> <!-- Иконка для iOS -->
-    <link rel="manifest" href="/manifest.json"> <!-- Манифест PWA -->
+    <meta name="theme-color" content="#f2f2f7">
+    <!-- Относительные пути к файлам в текущей папке (weather-appp) -->
+    <link rel="icon" type="image/svg+xml" href="images/sun-svgrepo-com (2).svg">
+    <link rel="apple-touch-icon" href="images/icon-192.png">
+    <link rel="manifest" href="manifest.json">
 
     <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link href="/styles.css" rel="stylesheet"> <!-- Путь к CSS -->
+    <link href="styles.css" rel="stylesheet">
 </head>
 <body>
     <div class="ios-container">
@@ -137,8 +137,8 @@
          <!-- Шаблон для оверлея загрузки (создается в JS) -->
     </div>
 
-    <!-- Подключаем главный JS файл как модуль -->
-    <script type="module" src="/js/main.js"></script> <!-- Путь к JS -->
+    <!-- Относительный путь к JS -->
+    <script type="module" src="js/main.js"></script>
 
 </body>
 </html>
