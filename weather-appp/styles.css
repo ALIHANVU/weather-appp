@@ -11,6 +11,7 @@
     --ios-padding: 16px;
     --ios-transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
     --ios-font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
+    --ios-bg-rgb: 242, 242, 247; /* RGB for opacity */
 }
 
 /* Сброс и базовые стили */
@@ -36,7 +37,7 @@ body {
     font-weight: 400;
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     overflow-x: hidden;
-    min-height: 100%; /* Changed from height: 100% */
+    min-height: 100%;
     background-image: linear-gradient(180deg, rgba(189, 222, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%);
     background-attachment: fixed;
 }
@@ -46,7 +47,7 @@ body {
     max-width: 520px;
     margin: 0 auto;
     padding: 16px;
-    padding-bottom: 32px; /* Add padding for longer content */
+    padding-bottom: 32px;
 }
 
 /* Поисковая секция */
@@ -55,11 +56,11 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    background-color: transparent;
+    background-color: rgba(var(--ios-bg-rgb), 0.8); /* Background for blur */
     padding-top: 12px;
     padding-bottom: 12px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
 }
 
 .search-container {
@@ -157,6 +158,8 @@ body {
     padding: 8px;
     border-radius: 8px;
     transition: background-color 0.2s;
+    position: relative; /* For ripple */
+    overflow: hidden; /* For ripple */
 }
 
 .settings-toggle-button:hover,
@@ -168,23 +171,22 @@ body {
     background-color: var(--ios-card-bg-blur);
     border-radius: var(--ios-border-radius);
     margin-top: 8px;
-    /* padding: var(--ios-padding); */ /* Use max-height transition instead */
     box-shadow: var(--ios-shadow);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.2);
     text-align: left;
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease-out, padding 0.3s ease-out, opacity 0.3s ease-out;
     opacity: 0;
-    padding: 0 var(--ios-padding); /* Add horizontal padding */
+    padding: 0 var(--ios-padding);
 }
 
 .settings-panel:not(.hidden) {
-    max-height: 300px; /* Достаточно для контента */
+    max-height: 300px;
     opacity: 1;
-    padding: var(--ios-padding); /* Восстанавливаем паддинг при открытии */
+    padding: var(--ios-padding);
 }
 
 
@@ -206,11 +208,11 @@ body {
 }
 
 .toggle-switch {
-    display: inline-flex; /* Changed to inline-flex */
+    display: inline-flex;
     background-color: rgba(118, 118, 128, 0.24);
     border-radius: 8px;
     overflow: hidden;
-    padding: 2px; /* Add padding for spacing */
+    padding: 2px;
 }
 
 .toggle-button {
@@ -222,16 +224,15 @@ body {
     color: var(--ios-secondary);
     cursor: pointer;
     transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
-    border-radius: 6px; /* Apply border-radius to all */
-    position: relative; /* For ripple */
-    overflow: hidden; /* For ripple */
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
 }
 
 .toggle-button.active {
     background-color: var(--ios-card-bg);
     color: var(--ios-text);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    /* margin: 2px; Removed margin */
 }
 
 .toggle-button:not(.active):hover {
@@ -245,9 +246,8 @@ body {
     background-color: var(--ios-card-bg);
     border-radius: var(--ios-border-radius);
     box-shadow: var(--ios-shadow);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    animation: fadeIn 0.5s ease-in-out;
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -297,28 +297,28 @@ body {
     margin-bottom: 16px;
     padding: var(--ios-padding);
     box-shadow: var(--ios-shadow);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    /* animation: slideUp 0.5s ease-out both; */ /* Removed default animation */
-    /* animation-delay: calc(0.1s * var(--index)); */
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
     position: relative;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
-/* Add animation when results are shown */
+/* Анимация появления карточек */
 #weatherResult:not(.hidden) .weather-card {
-     animation: slideUp 0.5s ease-out both;
-     animation-delay: calc(0.05s * var(--index)); /* Slightly faster cascade */
+     opacity: 0; /* Start hidden */
+     animation: slideUp 0.4s ease-out forwards; /* Use forwards to keep final state */
+     animation-delay: calc(0.05s * var(--index));
 }
 #weatherResult:not(.hidden) .weather-main {
-     animation: fadeIn 0.5s ease-in-out;
+     opacity: 0;
+     animation: fadeIn 0.5s ease-in-out forwards;
 }
 
 
 @keyframes slideUp {
     from {
-        transform: translateY(20px);
+        transform: translateY(15px);
         opacity: 0;
     }
     to {
@@ -345,16 +345,18 @@ body {
 
 /* Карточка - общий заголовок */
 .card-header {
-    font-size: 17px;
+    font-size: 16px; /* Slightly smaller */
     font-weight: 600;
-    letter-spacing: -0.3px;
+    letter-spacing: -0.2px;
     margin-bottom: 10px;
     color: var(--ios-secondary);
+    text-transform: uppercase;
+    opacity: 0.8;
 }
 
 /* Почасовой прогноз */
-.hourly-forecast .card-header { /* Specific header for hourly */
-     margin-bottom: 0; /* Reduced margin */
+.hourly-forecast .card-header {
+     margin-bottom: 0;
  }
 
 .forecast-scroll {
@@ -364,66 +366,46 @@ body {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE и Edge */
-    margin: 0 calc(-1 * var(--ios-padding)); /* Extend scroll to edges */
+    margin: 0 calc(-1 * var(--ios-padding));
     padding-left: var(--ios-padding);
     padding-right: var(--ios-padding);
 }
 
 .forecast-scroll::-webkit-scrollbar {
-    display: none; /* Chrome и Safari */
+    display: none;
 }
 
 .forecast-hour {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 0 4px; /* Reduced margin */
-    min-width: 60px; /* Slightly wider */
-    /* animation: fadeSlideRight 0.5s both; */ /* Removed */
+    margin: 0 4px;
+    min-width: 60px;
     padding: 12px 8px;
     border-radius: 14px;
     transition: background-color 0.2s;
-    position: relative; /* For ripple */
-    overflow: hidden; /* For ripple */
+    position: relative;
+    overflow: hidden;
 }
-
-/* .forecast-hour:first-child {
-    margin-left: 4px;
-}
-
-.forecast-hour:last-child {
-    margin-right: 4px;
-} */
 
 .forecast-hour:active {
     background-color: rgba(0, 0, 0, 0.05);
 }
 
-/* @keyframes fadeSlideRight {
-    from {
-        transform: translateX(-10px);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-} */
-
 .forecast-time {
     font-size: 15px;
     color: var(--ios-secondary);
-    margin-bottom: 6px; /* Reduced */
+    margin-bottom: 6px;
     white-space: nowrap;
     font-weight: 500;
 }
 
 .forecast-icon {
     font-size: 24px;
-    margin-bottom: 6px; /* Reduced */
+    margin-bottom: 6px;
 }
 
-.forecast-pop { /* Style for Probability of Precipitation */
+.forecast-pop {
     font-size: 11px;
     color: var(--ios-blue);
     font-weight: 600;
@@ -436,15 +418,18 @@ body {
 }
 
 /* Детали погоды */
+.weather-details .card-header {
+    margin-bottom: 14px; /* More margin for details header */
+}
+
 .details-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
 }
 
-/* Keep 4 columns on larger screens if details card is wide enough */
 @media (min-width: 480px) {
-     .ios-container:not([style*="max-width: 380px"]) .details-grid { /* Avoid 4 columns if container is narrow */
+     .ios-container:not([style*="max-width: 380px"]) .details-grid {
           grid-template-columns: repeat(4, 1fr);
       }
  }
@@ -457,8 +442,8 @@ body {
     flex-direction: column;
     transition: transform 0.2s, box-shadow 0.2s;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    position: relative; /* For ripple */
-    overflow: hidden; /* For ripple */
+    position: relative;
+    overflow: hidden;
 }
 
 .detail-item:active {
@@ -474,6 +459,7 @@ body {
 .detail-icon {
     margin-right: 8px;
     font-size: 16px;
+    opacity: 0.7;
 }
 
 .detail-title {
@@ -519,7 +505,6 @@ body {
     padding: 14px;
     display: flex;
     align-items: flex-start;
-    /* animation: fadeIn 0.5s both; Removed */
     position: relative;
     overflow: hidden;
     transition: transform 0.2s, box-shadow 0.2s;
@@ -543,6 +528,10 @@ body {
 }
 
 /* Стили для недельного прогноза */
+.weekly-forecast .forecast-header {
+     margin-bottom: 14px;
+}
+
 .weekly-forecast-grid {
     display: grid;
     gap: 10px;
@@ -550,18 +539,17 @@ body {
 
 .weekly-day {
     display: grid;
-    grid-template-columns: auto 1fr auto; /* Day name, flexible space, temps */
-    grid-template-rows: auto; /* Single row */
-    gap: 12px; /* Gap between columns */
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto;
+    gap: 12px;
     background-color: rgba(255, 255, 255, 0.35);
     border-radius: 14px;
-    padding: 12px 16px; /* Adjusted padding */
+    padding: 12px 16px;
     align-items: center;
-    /* animation: fadeIn 0.5s both; Removed */
     transition: transform 0.2s, box-shadow 0.2s;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    position: relative; /* For ripple */
-    overflow: hidden; /* For ripple */
+    position: relative;
+    overflow: hidden;
 }
 
 
@@ -572,13 +560,13 @@ body {
 .weekly-day-name {
     font-size: 16px;
     font-weight: 500;
-    white-space: nowrap; /* Prevent wrapping */
+    white-space: nowrap;
 }
 
 .weekly-day-icon {
-    font-size: 22px; /* Slightly larger */
+    font-size: 22px;
     text-align: center;
-    justify-self: center; /* Center icon in its grid area */
+    justify-self: center;
 }
 
 .weekly-day-temp {
@@ -596,28 +584,20 @@ body {
 /* Индикация загрузки */
 .loading-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(var(--ios-bg-rgb, 242, 242, 247), 0.8); /* Use RGB for opacity */
+    inset: 0; /* top, right, bottom, left = 0 */
+    background-color: rgba(var(--ios-bg-rgb), 0.8);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    transition: opacity 0.3s;
+    opacity: 0; /* Start hidden */
+    transition: opacity 0.3s ease-in-out;
+    pointer-events: none; /* Allow clicks through when hidden */
 }
-
-/* Add RGB versions of background colors */
-:root {
-    --ios-bg-rgb: 242, 242, 247;
-}
-@media (prefers-color-scheme: dark) {
-    :root {
-        --ios-bg-rgb: 0, 0, 0;
-    }
+.loading-overlay:not([style*="opacity: 0"]) { /* Only block events when visible */
+    pointer-events: auto;
 }
 
 
@@ -655,7 +635,7 @@ body {
 /* Ошибки */
 .error-notification {
     position: fixed;
-    top: calc(env(safe-area-inset-top, 0px) + 10px); /* Position below notch/status bar */
+    top: calc(env(safe-area-inset-top, 0px) + 10px);
     left: 50%;
     transform: translateX(-50%);
     background-color: #ff3b30;
@@ -666,10 +646,17 @@ body {
     font-size: 15px;
     z-index: 1001;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    animation: slideDownFadeIn 0.3s ease-out, fadeOut 0.3s 3.7s forwards; /* Longer display */
-    max-width: calc(100% - 32px); /* Ensure padding */
+    animation: slideDownFadeIn 0.3s ease-out forwards;
+    max-width: calc(100% - 32px);
     text-align: center;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
 }
+/* Add a class for fade out animation */
+.error-notification.fade-out {
+    opacity: 0;
+}
+
 
 @keyframes slideDownFadeIn {
     from {
@@ -682,31 +669,29 @@ body {
     }
 }
 
-@keyframes fadeOut {
-    to {
-        opacity: 0;
-        visibility: hidden; /* Hide after fade */
-    }
+/* Плавное обновление текста */
+[id^="cityName"], [id^="temperature"], [id^="weatherDescription"],
+[id^="maxTemp"], [id^="minTemp"], [id^="lastUpdated"],
+[id^="feelsLike"], [id^="humidity"], [id^="windSpeed"],
+[id^="visibility"], [id^="uvIndex"], [id^="precipitationProb"],
+[id^="sunriseTime"], [id^="sunsetTime"] {
+    transition: opacity 0.15s ease-in-out;
 }
 
-
-/* Плавное обновление текста */
 .data-updating {
-    opacity: 0 !important; /* Use important to override */
-    transition: opacity 0.15s ease-in-out !important;
+    opacity: 0 !important;
 }
 
 
 /* Скрытие элементов */
 .hidden {
-    display: none !important; /* Use important for reliability */
+    display: none !important;
 }
 
 /* Дополнительные настройки для iOS Safe Area */
 @supports (-webkit-touch-callout: none) {
     body {
-        padding-top: env(safe-area-inset-top);
-        padding-bottom: env(safe-area-inset-bottom);
+        /* Padding already applied */
     }
 
     .ios-container {
@@ -746,7 +731,7 @@ body {
         padding: 24px;
     }
      .details-grid {
-        grid-template-columns: repeat(4, 1fr); /* Force 4 columns on large screens */
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 
@@ -758,11 +743,16 @@ body {
         --ios-card-bg-blur: rgba(30, 30, 32, 0.65);
         --ios-text: #ffffff;
         --ios-secondary: #98989d;
-        --ios-blue: #0a84ff; /* Slightly brighter blue for dark mode */
+        --ios-blue: #0a84ff;
+        --ios-bg-rgb: 0, 0, 0;
     }
 
     body {
         background-image: linear-gradient(180deg, rgba(0, 64, 128, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
+    }
+
+    .search-section {
+         background-color: rgba(var(--ios-bg-rgb), 0.8);
     }
 
     .search-container {
@@ -795,7 +785,7 @@ body {
     }
      .settings-toggle-button:hover,
     .settings-toggle-button:focus-visible {
-        background-color: rgba(10, 132, 255, 0.15); /* Darker hover */
+        background-color: rgba(10, 132, 255, 0.15);
     }
     .settings-panel {
         background-color: rgba(30, 30, 32, 0.75);
@@ -808,18 +798,18 @@ body {
         background-color: rgba(58, 58, 60, 0.8);
     }
      .toggle-button.active {
-        background-color: #636366; /* Darker active background */
+        background-color: #636366;
         color: var(--ios-text);
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
      .toggle-button:not(.active) {
-         color: #aeaeb2; /* Slightly lighter inactive text */
+         color: #aeaeb2;
      }
      .toggle-button:not(.active):hover {
          color: var(--ios-text);
      }
      .ripple {
-         background-color: rgba(255, 255, 255, 0.2); /* Lighter ripple */
+         background-color: rgba(255, 255, 255, 0.2);
      }
 }
 
@@ -828,11 +818,11 @@ body {
 :focus-visible {
     outline: 2px solid var(--ios-blue);
     outline-offset: 2px;
-    border-radius: 4px; /* Slight radius on outline */
+    border-radius: 4px;
 }
 /* Specific focus for search input */
 #citySearch:focus-visible {
-    outline: none; /* Remove outline, use parent box-shadow */
+    outline: none;
 }
 
 
@@ -840,6 +830,7 @@ body {
 @media (hover: hover) {
     .search-button:hover {
         background-color: #0069d9;
+        filter: brightness(1.1);
     }
     @media (prefers-color-scheme: dark) {
          .search-button:hover {
@@ -868,12 +859,12 @@ body {
 }
 
 /* Улучшение визуальной обратной связи */
-.search-button, .detail-item, .tip-item, .weekly-day, .forecast-hour {
-    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+.search-button, .detail-item, .tip-item, .weekly-day, .forecast-hour, .settings-toggle-button, .toggle-button {
+    transition: background-color 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 /* Улучшение адаптивности под мобильные устройства */
-@media (max-width: 380px) { /* Target smaller phones */
+@media (max-width: 380px) {
      .ios-container {
         padding: 12px;
     }
@@ -898,7 +889,13 @@ body {
     .detail-item {
         padding: 12px 10px;
     }
-
+     .detail-header {
+        margin-bottom: 6px;
+    }
+     .detail-icon {
+         font-size: 14px;
+         margin-right: 6px;
+     }
     .detail-value {
         font-size: 16px;
     }
@@ -911,6 +908,13 @@ body {
         padding-left: 14px;
         padding-right: 14px;
     }
+     .forecast-hour {
+        min-width: 55px;
+        padding: 10px 6px;
+    }
+     .forecast-time { font-size: 14px; }
+     .forecast-temp { font-size: 16px; }
+
      .weekly-day {
         padding: 10px 12px;
         gap: 8px;
@@ -921,6 +925,13 @@ body {
      .weekly-day-temp {
         font-size: 16px;
     }
+     .weekly-day-temp .temp-min {
+         margin-left: 6px;
+     }
+     .tips-title, .forecast-title { font-size: 16px; }
+     .tip-text { font-size: 14px; }
+     .setting-item span { font-size: 15px;}
+     .toggle-button { font-size: 13px; padding: 5px 10px;}
 }
 
 /* Уменьшение анимаций при reduced motion */
@@ -934,9 +945,15 @@ body {
     scroll-behavior: auto !important;
     animation-delay: 0ms !important;
   }
-  .ripple { display: none; } /* Отключаем ripple */
+  .ripple { display: none; }
   #weatherResult:not(.hidden) .weather-card,
   #weatherResult:not(.hidden) .weather-main {
-      animation: none; /* Отключаем slideUp/fadeIn */
+      animation: none;
+      opacity: 1; /* Ensure visible without animation */
   }
+   .loading-spinner::before { animation: none; border-top-color: rgba(0, 122, 255, 0.2); /* Make spinner static */}
+   .error-notification { animation: none; opacity: 1; }
+   .data-updating { transition: none !important; }
+   .settings-panel { transition: none !important; }
+   .loading-overlay { transition: none !important; }
 }
